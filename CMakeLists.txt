@@ -3,4 +3,4 @@ project(cppKit)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(cppKit main.cpp)
+add_subdirectory(LockFreeQueue)
