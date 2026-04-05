@@ -14,7 +14,9 @@ private:
 public:
 
     Ref_count(T* t) : ptr(t), count(new int(1)) {
-
+        if(!ptr) {
+            count = nullptr;
+        }
     }
 
     ~Ref_count() {

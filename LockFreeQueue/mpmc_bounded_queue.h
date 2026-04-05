@@ -1,5 +1,6 @@
 //
 // Created by jianp on 2026/3/17.
+// 这是一个多生产者多消费者的无锁队列
 //
 
 #include <iostream>
