@@ -1,6 +1,7 @@
 //
 // Created by jianp on 2026/3/17.
 //
+// 这个线程池的实现是我看过最简单也最复杂的
 
 #ifndef CPPKIT_THREADPOOL_H
 #define CPPKIT_THREADPOOL_H

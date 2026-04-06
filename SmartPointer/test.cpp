@@ -36,6 +36,33 @@ int main() {
     }
 
     assert(Counter::destroyed == 1);
+
+    Counter::destroyed = 0;
+    {
+        Ref_count<Counter> a(new Counter(1, "a"));
+        Ref_count<Counter> b(new Counter(2, "b"));
+
+        b = a;
+        assert(a.get_count() == 2);
+        assert(b.get_count() == 2);
+        assert(b->value == 1);
+        assert(Counter::destroyed == 1);
+
+        a = a;
+        assert(a.get_count() == 2);
+    }
+    assert(Counter::destroyed == 2);
+
+    {
+        Ref_count<Counter> empty(nullptr);
+        assert(empty.get() == nullptr);
+        assert(empty.get_count() == 0);
+
+        Ref_count<Counter> empty2(empty);
+        assert(empty2.get() == nullptr);
+        assert(empty2.get_count() == 0);
+    }
+
     return 0;
 }
 

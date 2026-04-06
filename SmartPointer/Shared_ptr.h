@@ -2,8 +2,8 @@
 // Created by jianp on 2026/3/23.
 //
 
-#include <iostream>
-#include <memory>
+#ifndef CPPKIT_SHARED_PTR_H
+#define CPPKIT_SHARED_PTR_H
 
 template<typename T>
 class Ref_count {
@@ -13,11 +13,7 @@ private:
 
 public:
 
-    Ref_count(T* t) : ptr(t), count(new int(1)) {
-        if(!ptr) {
-            count = nullptr;
-        }
-    }
+    explicit Ref_count(T* t) : ptr(t), count(t ? new int(1) : nullptr) {}
 
     ~Ref_count() {
         decrease();
@@ -30,7 +26,7 @@ public:
     }
 
     Ref_count<T>& operator=(const Ref_count<T>& other) {
-        if(other != this) {
+        if(this != &other) {
             decrease();
             ptr = other.ptr;
             count = other.count;
@@ -77,3 +73,5 @@ public:
         return *count;
     }
 };
+
+#endif // CPPKIT_SHARED_PTR_H
