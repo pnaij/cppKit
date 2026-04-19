@@ -15,6 +15,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include <atomic>
 
 class ThreadPool {
 public:
@@ -22,7 +23,7 @@ public:
 
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args)
-        -> std::future<typename std::result_of<F(Args...)>::type>;
+        -> std::future<std::invoke_result_t<F, Args...>>;
     ~ThreadPool();
 
 private:
@@ -31,7 +32,7 @@ private:
 
     std::mutex queue_mutex;
     std::condition_variable condition;
-    bool stop;
+    std::atomic<bool> stop;
 };
 
 inline ThreadPool::ThreadPool(size_t threads)
@@ -45,9 +46,9 @@ inline ThreadPool::ThreadPool(size_t threads)
                         {
                             std::unique_lock<std::mutex> lock(this->queue_mutex);
                             this->condition.wait(lock, [this]{
-                                return this->stop || !this->tasks.empty();
+                                return this->stop.load() || !this->tasks.empty();
                             });
-                            if(this->stop && this->tasks.empty()) {
+                            if(this->stop.load() && this->tasks.empty()) {
                                 return ;
                             }
                             task = std::move(this->tasks.front());
@@ -62,10 +63,8 @@ inline ThreadPool::ThreadPool(size_t threads)
 }
 
 template<class F, class... Args>
-auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::result_of<F(Args...)>::type> {
-    using returnType = typename std::result_of<F(Args...)>::type;
-//    using returnType = std::result_of_t<F(Args...)>;
-//    using returnType = decltype(std::declval<F>()(std::declval<Args>()...));
+auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<std::invoke_result_t<F, Args...>> {
+    using returnType = std::invoke_result_t<F, Args...>;
 
     auto task = std::make_shared<std::packaged_task<returnType()>>(
                 std::bind(std::forward<F>(f), std::forward<Args>(args)...)
@@ -74,7 +73,7 @@ auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::res
     std::future<returnType> res = task->get_future();
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
-        if(stop) {
+        if(stop.load()) {
             throw std::runtime_error("enqueue on stopped ThreadPool");
         }
 
@@ -88,7 +87,7 @@ auto ThreadPool::enqueue(F &&f, Args &&...args) -> std::future<typename std::res
 inline ThreadPool::~ThreadPool() {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
-        stop = true;
+        stop.store(true);
     }
 
     condition.notify_all();

@@ -5,7 +5,7 @@
       <paths name="Ubuntu Local (82ef39fe-8a55-49f0-902b-7ade096e2707)">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/tmp/cppKit" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
